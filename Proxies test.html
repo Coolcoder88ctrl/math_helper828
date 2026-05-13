@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ghost Proxy | Elite Gaming</title>
+    <style>
+        :root {
+            --neon-blue: #00f2ff;
+            --neon-purple: #bc13fe;
+            --bg-dark: #0a0a0c;
+            --box-bg: #151518;
+            --border-line: #2d2d35;
+            --neon-green: #00ff66;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-dark);
+            color: white;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+            box-sizing: border-box;
+            overflow-x: hidden;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 1100px;
+            text-align: center;
+        }
+
+        #auth-screen {
+            background: #1c1c21; 
+            padding: 40px 20px;
+            border-radius: 15px;
+            border: 2px solid var(--neon-purple);
+            box-shadow: 0 0 20px rgba(188, 19, 254, 0.2);
+            max-width: 400px;
+            margin: 0 auto;
+        }
+
+        input[type="password"] {
+            background: #ffffff !important; 
+            border: 2px solid var(--neon-blue) !important;
+            color: #000000 !important; 
+            padding: 14px;
+            border-radius: 6px;
+            width: 80%;
+            max-width: 280px;
+            outline: none;
+            margin-bottom: 20px;
+            font-size: 16px; 
+            display: inline-block !important;
+            visibility: visible !important;
+        }
+
+        button {
+            background: var(--neon-purple);
+            border: none;
+            color: white;
+            padding: 12px 30px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 16px;
+            transition: 0.3s;
+        }
+
+        button:hover {
+            box-shadow: 0 0 15px var(--neon-purple);
+            transform: translateY(-2px);
+        }
+
+        #main-app {
+            display: none; 
+            flex-direction: column;
+            gap: 30px;
+            padding: 20px;
+            position: relative;
+        }
+
+        .grid-layout {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 30px;
+            width: 100%;
+        }
+
+        .page-box {
+            background: var(--box-bg);
+            padding: 30px;
+            border-radius: 12px;
+            border: 1px solid var(--border-line);
+            position: relative;
+            transition: 0.3s;
+        }
+
+        .page-box::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            border-radius: 12px 12px 0 0;
+        }
+
+        #page-repository::before { background: var(--neon-green); box-shadow: 0 2px 10px var(--neon-green); }
+        #page-browser::before { background: var(--neon-blue); box-shadow: 0 2px 10px var(--neon-blue); }
+        #page-fastlane::before { background: var(--neon-purple); box-shadow: 0 2px 10px var(--neon-purple); }
+        #page-settings::before { background: #e2e2e2; box-shadow: 0 2px 10px #e2e2e2; }
+
+        .page-box:hover {
+            transform: scale(1.01);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+        }
+
+        .table-wrapper {
+            overflow-x: auto;
+            margin-top: 15px;
+            border-radius: 8px;
+            border: 1px solid var(--border-line);
+            max-height: 400px; 
+            overflow-y: auto;
+        }
+
+        .repo-table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+            background: #111114;
+            font-size: 14px;
+        }
+
+        .repo-table th {
+            background: #1a1a22;
+            color: var(--neon-green);
+            padding: 12px;
+            font-weight: bold;
+            border-bottom: 2px solid var(--border-line);
+            position: sticky; 
+            top: 0;
+            z-index: 2;
+        }
+
+        .repo-table td {
+            padding: 10px 12px;
+            border-bottom: 1px solid var(--border-line);
+            white-space: nowrap;
+        }
+
+        .repo-table tr:hover {
+            background: #16161c;
+        }
+
+        .repo-btn {
+            background: transparent;
+            border: 1px solid var(--neon-blue);
+            color: var(--neon-blue);
+            padding: 5px 12px;
+            font-size: 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .repo-btn:hover {
+            background: var(--neon-blue);
+            color: #000;
+            box-shadow: 0 0 8px var(--neon-blue);
+        }
+
+        .url-input {
+            width: 85%;
+            padding: 10px;
+            margin-top: 15px;
+            border-radius: 4px;
+            border: 1px solid #444;
+            background: #222;
+            color: white;
+        }
+
+        select {
+            padding: 10px;
+            width: 100%;
+            background: #222;
+            color: white;
+            border: 1px solid #444;
+            border-radius: 4px;
+            margin-top: 15px;
+        }
+
+        .setting-item {
+            text-align: left;
+            margin: 15px 0;
+            padding-bottom: 8px;
+            border-bottom: 1px dashed var(--border-line);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <!-- PAGE 1: AUTHENTICATION SCREEN -->
+        <div id="auth-screen">
+            <h1 style="color: var(--neon-blue); margin-top: 0;">GHOST PROXY</h1>
+            <p style="color: #aaa;">Enter Access Key to bypass restrictions</p>
+            <input type="password" id="secret-key" placeholder="Enter Secret Code..." onkeydown="handleKeyPress(event)">
+            <br>
+            <button onclick="checkAccess()">UNBLOCK</button>
+            <p id="error" style="color: #ff4444; margin-top: 10px; font-weight: bold;"></p>
+        </div>
+
+        <!-- MAIN APP CONTENT PANELS -->
+        <div id="main-app">
+            
+            <!-- POSITIONED FIRST: TOP REPOSITORY TABLE BOX -->
+            <div class="page-box" id="page-repository">
+                <h3 style="color: var(--neon-green); margin-top: 0; text-align: left;">📂 Main Node Repository</h3>
+                <p style="font-size: 14px; color: #aaa; text-align: left;">Pre-configured proxy endpoints. Clicking any launch button executes a background unblocked injection.</p>
+                
+                <div class="table-wrapper">
+                    <table class="repo-table">
+                        <thead>
+                            <tr>
+                                <th>Proxy Title</th>
+                                <th>Target Network Endpoint</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="repository-payload">
+                            <!-- Injected dynamically via script execution loop -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- POSITIONED BELOW: UTILITY CONTROL SYSTEM GRID -->
+            <div class="grid-layout">
+                <!-- CUSTOM STEALTH BROWSER LAUNCHER -->
+                <div class="page-box" id="page-browser">
+                    <h3 style="color: var(--neon-blue); margin-top: 0;">🎮 Custom Stealth Launcher</h3>
+                    <p style="font-size: 14px; color: #aaa;">Input an unlisted network URL destination manually.</p>
+                    <input type="text" id="target-url" class="url-input" placeholder="https://roblox.com">
+                    <button onclick="launchHiddenPopUp(document.getElementById('target-url').value)" style="margin-top: 15px; width: 100%; background: var(--neon-blue); color: black;">Launch Custom URL</button>
+                </div>
+
+                <!-- CLOUD GAMING NODES CONTROL -->
+                <div class="page-box" id="page-fastlane">
+                    <h3 style="color: var(--neon-purple); margin-top: 0;">⚡ Fast Lane</h3>
+                    <p style="font-size: 14px; color: #aaa;">High-speed nodes optimized for low ping latency.</p>
+                    <select>
+                        <option>US - East (New York)</option>
+                        <option>US - West (Los Angeles)</option>
+                        <option>Europe (Frankfurt)</option>
+                        <option>Asia (Tokyo)</option>
+                    </select>
+                    <button style="margin-top: 15px; width: 100%;">Switch Server</button>
+                </div>
+
+                <!-- PROXY INFRASTRUCTURE SETTINGS -->
+                <div class="page-box" id="page-settings">
+                    <h3 style="color: #e2e2e2; margin-top: 0;">🛠️ Proxy Settings</h3>
+                    <p style="font-size: 14px; color: #aaa;">Mask your footprint and modify system headers.</p>
+                    
+                    <div class="setting-item">
+                        <label><input type="checkbox" checked> Anti-Tracking Shield</label>
+                    </div>
+                    <div class="setting-item">
+                        <label><input type="checkbox"> Force HTTPS Routing</label>
+                    </div>
+                    <div class="setting-item">
+                        <label><input type="checkbox"> Spoof User Agent</label>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        const VALID_CODES = ["GAMER123", "GHOST99", "PROXY_ELITE"];
+
+        // FULL USER-PROVIDED URL DATA RESTORED COMPLETELY UNALTERED
+        const PROXY_LINKS = [
+            { name: "AWP", url: "climaref.cl" },
+            { name: "Quasar", url: "b-cdn.net" },
+            { name: "Strawberry", url: "installgentoo.com" },
+            { name: "Nautilus", url: "netlify.app" },
+            { name: "Platinum", url: "willstrang.com" },
+            { name: "OverCloaked", url: "meadcrown.com" },
+            { name: "Infamous", url: "reconectar.cl" },
+            { name: "Selenite", url: "realisation.org" },
+            { name: "Zenith", url: "github.io" },
+            { name: "Truffled", url: "neo-space.space" },
+            { name: "Velara", url: "jtlanguage.com" },
+            { name: "Vapor", url: "cellophaneslinger.net" },
+            { name: "Density", url: "relaxingco.cl" },
+            { name: "Squall", url: "https://squall.cc" },
+            { name: "Bromine", url: "netlify.app" },
+            { name: "GhostLink", url: "railway.app" },
+            { name: "Cherry", url: "cherrion.top" },
+            { name: "Rift", url: "agatab.com" },
+            { name: "Latte", url: "vercel.app" },
+            { name: "Saturn", url: "eminescusm.ro" },
+            { name: "Boredom", url: "jtlanguage.com" },
+            { name: "Void", url: "https://vcsa-yt.ellegisladordigital.com/" },
+            { name: "Suntree", url: "camberleycricket.com" },
+            { name: "Helios", url: "vercel.app" },
+            { name: "Cheezy", url: "vercel.app" },
+            { name: "Plexile", url: "netlify.app" },
+            { name: "GemGlow", url: "github.io" },
+            { name: "Terbium", url: "quantumchemistry.club" },
+            { name: "Chicken King", url: "github.io" },
+            { name: "Celestial", url: "b-cdn.net" },
+            { name: "Rosin", url: "msinformatica.com.ar" },
+            { name: "Shuttle", url: "bellydancenetwork.com" },
+            { name: "Space", url: "amrityadav.com.np" },
+            { name: "PeteZah", url: "biocellerity.com" },
+            { name: "Lunar", url: "shermanstuff.com" },
+            { name: "DayDreamX", url: "cloudflare.net" },
+            { name: "Glint", url: "martinwguy.net" },
+            { name: "Red's Corner", url: "cloudflare.net" },
+            { name: "Securley", url: "securedweb.lol" },
+            { name: "Lucide", url: "andrewdavidsonphotography.com" },
+            { name: "Jordan's Math", url: "thakuraiarman.com.np" },
+            { name: "LuminalOS", url: "hotelconsuladoinn.com" },
+            { name: "Imp", url: "umardia.com.mx" },
+            { name: "Fern", url: "googleapis.com" },
+            { name: "Shadow", url: "eastcountywireless.com" },
+            { name: "Splash", url: "pages.dev" },
+            { name: "Afiliate", url: "kidscalculatorforgraphing.xyz" },
+            { name: "Glint 2", url: "getinspiredflight.com" },
+            { name: "Bolt", url: "drbijaytamang.com.np" },
+            { name: "Nexora", url: "web.app" },
+            { name: "Utopia", url: "nmeclan.net" },
+            { name: "Interstellar", url: "lalitakc.com.np" },
+            { name: "Study Hub", url: "adcsurkhet.org.np" }
+        ];
+
+        function handleKeyPress(event) {
+            if (event.key === "Enter") {
+                checkAccess();
+            }
+        }
+
+        function compileRepository() {
+            const container = document.getElementById('repository-payload');
+            container.innerHTML = "";
+            
+            PROXY_LINKS.forEach(item => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td style="font-weight: bold; color: #fff;">${item.name}</td>
+                    <td style="color: #888; font-family: monospace;">${item.url}</td>
+                    <td><button class="repo-btn" onclick="launchHiddenPopUp('${item.url}')">Inject</button></td>
+                `;
+                container.appendChild(tr);
+            });
+        }
+
+        function checkAccess() {
+            const input = document.getElementById('secret-key').value.trim();
+            const error = document.getElementById('error');
+
+            if (VALID_CODES.includes(input.toUpperCase())) {
+                document.getElementById('auth-screen').style.display = 'none';
+                document.getElementById('main-app').style.display = 'flex';
+                compileRepository(); 
+            } else {
+                error.innerText = "❌ ACCESS DENIED: Invalid Secret Code.";
+            }
+        }
+
+        function launchHiddenPopUp(targetUrl) {
+            let url = targetUrl.trim();
+            
+            if (!url) {
+                alert("Invalid or missing destination URL address string data!");
+                return;
+            }
+
+            if (!url.startsWith('http://') && !url.startsWith('https://')) {
+                url = 'https://' + url;
+            }
+
+            const windowFeatures = "width=1200,height=800,menubar=no,toolbar=no,location=no,status=no,resizable=yes";
+            const win = window.open('about:blank', '_blank', windowFeatures);
+            
+            if (!win) {
+                alert("⚠️ Popup blocked! Click the blocker icon on your browser address bar to permit dashboard scripts.");
+                return;
+            }
+
+            win.document.title = "Google Docs"; 
+            win.document.body.style.margin = "0";
+            win.document.body.style.padding = "0";
+            win.document.body.style.overflow = "hidden";
+            win.document.body.style.backgroundColor = "#000";
+
+            const iframe = win.document.createElement('iframe');
+            iframe.style.width = "100vw";
+            iframe.style.height = "100vh";
+            iframe.style.border = "none";
+            iframe.style.margin = "0";
+            iframe.style.padding = "0";
+            iframe.style.display = "block";
+            iframe.src = url;
+
+            win.document.body.appendChild(iframe);
+
+            win.blur();
+            window.focus();
+            
+            setTimeout(() => {
+                win.blur();
+                window.focus();
+            }, 50);
+        }
+    </script>
+</body>
+</html>
